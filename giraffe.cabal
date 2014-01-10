@@ -1,58 +1,97 @@
-Name:                giraffe
-Version:             0.1
-Synopsis:            A fast and reliable Bittorrent tracker
-Description:         A fast and reliable Bittorrent tracker
-Homepage:            http://github.com/ameingast/giraffe
-License:             BSD3
-License-file:        LICENSE
-Author:              Andreas Meingast
-Maintainer:          ameingast@gmail.com
-Category:            Network
-Build-type:          Simple
-Cabal-version:       >= 1.2
+Name:                   giraffe
+Version:                0.1
+Synopsis:               A fast and reliable Bittorrent tracker
+Description:            A fast and reliable Bittorrent tracker
+Homepage:               https://github.com/ameingast/giraffe
+Bug-reports:            https://github.com/ameingast/giraffe/issues
+License:                BSD3
+License-file:           LICENSE
+Author:                 Andreas Meingast
+Maintainer:             ameingast@gmail.com
+Category:               Network
+Build-type:             Simple
+Cabal-version:          >= 1.6
 
-Executable giraffe
-  main-is:          Main.hs
-  hs-source-dirs:   src
-  
-  Build-depends:    base            >= 4.3 && < 5.0,
-                    bytestring      >= 0.9 && < 1.0,
-                    time            >= 1.2 && < 1.3,
-                    containers      >= 0.4 && < 0.5,
-                    enumerator      >= 0.4 && < 0.5,
+extra-source-files:     README.markdown
+                        bm/*.hs
+                        bm/System/Giraffe/*.hs
 
-                    warp            >= 0.4 && < 0.5,
-                    wai             >= 0.4 && < 0.5,
-                    
-                    bencode         >= 0.5 && < 0.6,
-                    url             >= 2.1 && < 2.2,
-                    http-types      >= 0.6 && < 0.7
-    
-  ghc-prof-options: -prof -auto-all  
-  
-  ghc-options:      -O2 -Wall -fwarn-tabs -funbox-strict-fields
-                    -threaded -fno-warn-unused-do-bind
-                    
-Test-Suite test-giraffe
-  main-is:          TestMain.hs
-  hs-source-dirs:   test src
-  
-  type:             exitcode-stdio-1.0
-  
-  Build-depends:    base            >= 4.3 && < 5.0,
-                    bytestring      >= 0.9 && < 1.0,
-                    time            >= 1.2 && < 1.3,
-                    containers      >= 0.4 && < 0.5,
-                    enumerator      >= 0.4 && < 0.5,
+                        src/*.hs
+                        src/System/Giraffe/*.hs
 
-                    warp            >= 0.4 && < 0.5,
-                    wai             >= 0.4 && < 0.5,
-                    
-                    bencode         >= 0.5 && < 0.6,
-                    url             >= 2.1 && < 2.2,
-                    http-types      >= 0.6 && < 0.7,
-                    
-                    QuickCheck      >= 2.4 && < 2.5
-                    
-  ghc-options:      -O2 -Wall -fwarn-tabs -funbox-strict-fields
-                    -threaded -fno-warn-unused-do-bind
+                        test/*.hs
+                        test/System/Giraffe/*.hs
+
+Executable              giraffe
+    main-is:            Main.hs
+    hs-source-dirs:     src
+
+    Build-depends:      base            >= 4.5 && < 5.0,
+                        bytestring      >= 0.10 && < 0.11,
+                        text            >= 1.0 && < 1.2,
+                        containers      >= 0.5 && < 0.6,
+                        enumerator      >= 0.4 && < 0.5,
+                        transformers    >= 0.3 && < 0.4,
+
+                        warp            >= 2.0 && < 2.1,
+                        wai             >= 2.0 && < 2.1,
+
+                        bencode         >= 0.5 && < 0.6,
+                        http-types      >= 0.8 && < 0.9,
+                        fast-logger     >= 2.1 && < 2.2
+
+    ghc-prof-options:   -prof -auto-all
+
+    ghc-options:        -O3 -Wall -fwarn-tabs -funbox-strict-fields
+                        -threaded -rtsopts
+
+Benchmark               giraffe-bm
+    main-is:            BenchmarkMain.hs
+    hs-source-dirs:     bm src
+
+    type:               exitcode-stdio-1.0
+
+    Build-depends:      base            >= 4.5 && < 5.0,
+                        bytestring      >= 0.10 && < 0.11,
+                        text            >= 1.0 && < 1.2,
+                        containers      >= 0.5 && < 0.6,
+                        enumerator      >= 0.4 && < 0.5,
+                        transformers    >= 0.3 && < 0.4,
+
+                        warp            >= 2.0 && < 2.1,
+                        wai             >= 2.0 && < 2.1,
+
+                        bencode         >= 0.5 && < 0.6,
+                        http-types      >= 0.8 && < 0.9,
+                        fast-logger     >= 2.1 && < 2.2,
+
+                        criterion       >= 0.8 && < 0.9
+
+    ghc-options:        -O3 -Wall -fwarn-tabs -funbox-strict-fields
+                        -threaded -rtsopts
+
+Test-Suite              giraffe-test
+    main-is:            TestMain.hs
+    hs-source-dirs:     test src
+
+    type:               exitcode-stdio-1.0
+
+    Build-depends:      base            >= 4.5 && < 5.0,
+                        bytestring      >= 0.10 && < 0.11,
+                        text            >= 1.0 && < 1.2,
+                        containers      >= 0.5 && < 0.6,
+                        enumerator      >= 0.4 && < 0.5,
+                        transformers    >= 0.3 && < 0.4,
+
+                        warp            >= 2.0 && < 2.1,
+                        wai             >= 2.0 && < 2.1,
+
+                        bencode         >= 0.5 && < 0.6,
+                        http-types      >= 0.8 && < 0.9,
+                        fast-logger     >= 2.1 && < 2.2,
+
+                        QuickCheck      >= 2.6 && < 2.7,
+                        test-framework  >= 0.8 && < 0.9,
+                        test-framework-quickcheck2 >= 0.3 && < 0.4
+
+    ghc-options:        -O0 -Wall -threaded -rtsopts

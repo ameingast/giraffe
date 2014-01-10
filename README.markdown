@@ -1,16 +1,18 @@
-GIRAFFE
-=======
+# GIRAFFE #
 
-About
------
 Giraffe is a fast and reliable Bittorrent tracker written in Haskell.
 
-Usage
------
+## Compilation ##
+This guide assumes that you have a sandbox compatible version of cabal
+installed.
 
-Dependencies
-------------
+### Build dependencies ###
+        make deps
 
-References
-----------
-API documentation taken from [wiki.theory.org](http://wiki.theory.org/BitTorrentSpecification).
+### Build application ###
+        make
+
+## Usage ##
+
+## References ##
+The API documentation was taken from [wiki.theory.org](http://wiki.theory.org/BitTorrentSpecification).

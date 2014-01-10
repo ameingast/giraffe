@@ -1,13 +1,12 @@
-module Main (
-  main
-) where
+module Main (main) where
 
-import Giraffe.Configuration(defaultConfiguration, cfgPort)
-import Giraffe.RequestRunner(runRequest)
-
-import Network.Wai.Handler.Warp(run)
+import           Network.Wai.Handler.Warp   (run)
+import           System.Giraffe.Application (handle)
+import           System.Giraffe.Tracker
+import           System.Giraffe.Types
 
 main :: IO ()
-main =
-  let port = cfgPort defaultConfiguration
-  in run port runRequest
+main = do
+    let handler = undefined :: InMemoryRequestHandler
+    config <- defaultConfiguration
+    run (cfgPort config) (handle config handler)
