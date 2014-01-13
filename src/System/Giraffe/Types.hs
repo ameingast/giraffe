@@ -2,11 +2,10 @@
 
 module System.Giraffe.Types where
 
-import           Data.BEncode          (BEncode (..))
-import qualified Data.ByteString.Lazy  as BS (fromChunks)
-import           Data.Text             (Text)
-import           Data.Text.Encoding    (encodeUtf8)
-import           System.Log.FastLogger
+import           Data.BEncode         (BEncode (..))
+import qualified Data.ByteString.Lazy as BS (fromChunks)
+import           Data.Text            (Text)
+import           Data.Text.Encoding   (encodeUtf8)
 
 -- | The data type that maps http announce request.
 data AnnounceRequest = AnnounceRequest
@@ -305,7 +304,7 @@ instance BEEncodable ScrapeResponse where
     encode (ScrapeResponse _ _) = Just $ BString ""
 
 instance BEEncodable ScrapeResponseFile where
-    encode ScrapeResponseFile{} = undefined
+    encode sr = undefined
 
 data InvalidRequest = InvalidRequest
     { invalidRequestMessage :: Text
@@ -348,44 +347,34 @@ data Configuration = Configuration
 
     , cfgAnnouncePrefix     :: Text
     , cfgScrapePrefix       :: Text
+    } deriving (Show, Eq, Read, Ord)
 
-    , cfgLog                :: LoggerSet
+defaultConfiguration :: Configuration
+defaultConfiguration = Configuration
+    { cfgTrackerId = "Giraffe"
+    , cfgTrackerVersion = "0.1"
+
+    , cfgRequestInterval = 50
+    , cfgMinRequestInterval = 50
+    , cfgRequestTimeout = 10000
+
+    , cfgHostName = "localhost"
+    , cfgPort = 8080
+    , cfgTorrentDirectory = "data"
+
+    , cfgAnnouncePrefix = "/announce"
+    , cfgScrapePrefix = "/scrape"
     }
 
-defaultConfiguration :: IO Configuration
-defaultConfiguration = do
-    loggerSet <- newLoggerSet 128 $ Just "application.log"
+class Tracker a where
+    trackerConfiguration :: a -> Configuration
 
-    return Configuration
-        { cfgTrackerId = "Giraffe"
-        , cfgTrackerVersion = "0.1"
-
-        , cfgRequestInterval = 50
-        , cfgMinRequestInterval = 50
-        , cfgRequestTimeout = 10000
-
-        , cfgHostName = "localhost"
-        , cfgPort = 8080
-        , cfgTorrentDirectory = "data"
-
-        , cfgAnnouncePrefix = "/announce"
-        , cfgScrapePrefix = "/scrape"
-
-        , cfgLog = loggerSet
-        }
-
-class RequestHandler a where
-    handleAnnounceRequest :: a -> Configuration -> AnnounceRequest -> IO AnnounceResponse
-    handleScrapeRequest :: a -> Configuration -> ScrapeRequest -> IO ScrapeResponse
-    handleInvalidRequest :: a -> Configuration -> InvalidRequest -> IO InvalidResponse
+    handleAnnounceRequest :: a -> AnnounceRequest -> IO AnnounceResponse
+    handleScrapeRequest :: a -> ScrapeRequest -> IO ScrapeResponse
+    handleInvalidRequest :: a -> InvalidRequest -> IO InvalidResponse
 
 class BEEncodable a where
     encode :: a -> Maybe BEncode
 
 class BEDecodable a where
     decode :: BEncode -> a
-
-data TrackerState = TrackerState 
-    {
-
-    } deriving (Show, Eq, Read, Ord)

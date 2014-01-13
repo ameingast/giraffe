@@ -4,8 +4,8 @@ module System.Giraffe.ApplicationBenchmark (applicationBenchmark) where
 
 import           Criterion.Config
 import           Criterion.Main
+import           Network.Wai                (Request (..), defaultRequest)
 import           System.Giraffe.Application (parseRequest)
-import           Network.Wai (Request (..), defaultRequest)
 
 scrapeRequest  :: Request
 scrapeRequest = defaultRequest

@@ -2,25 +2,46 @@
 
 module System.Giraffe.Tracker where
 
-import           Data.Text             (append)
+import           Control.Concurrent.MVar
 import           System.Giraffe.Types
-import           System.Log.FastLogger
+import           System.Giraffe.Util
 
-data InMemoryRequestHandler = InMemoryRequestHandler
-    deriving (Show, Eq, Read, Ord)
+data InMemoryTracker = InMemoryTracker
+    { inMemoryTrackerConfiguration :: Configuration
+    , inMemoryTrackerPeers         :: MVar [Peer]
+    , inMemoryTrackerTorrents      :: MVar [Torrent] }
+    deriving (Eq)
 
-instance RequestHandler InMemoryRequestHandler where
-    handleAnnounceRequest _handler config _request = do
-        pushLogStr (cfgLog config) "test"
-        return AnnounceResponse {}
+instance Tracker InMemoryTracker where
+    trackerConfiguration = inMemoryTrackerConfiguration
+    handleAnnounceRequest = handleInMemoryAnnounce
+    handleScrapeRequest = handleInMemoryScrape
+    handleInvalidRequest = handleInMemoryInvalid
 
-    handleScrapeRequest _handler config _request = do
-        pushLogStr (cfgLog config) "scrape"
-        return ScrapeResponse
-            { scrapeResponseFiles = []
-            , scrapeResponseFailure = Nothing
-            }
+createInMemoryTracker :: Configuration -> IO InMemoryTracker
+createInMemoryTracker config = do
+    ts <- loadFromDiskIntoMVar "torrents.hs" []
+    ps <- loadFromDiskIntoMVar "peers.hs" []
+    return $ InMemoryTracker config ps ts
 
-    handleInvalidRequest _handler config (InvalidRequest msg) = do
-        pushLogStr (cfgLog config) $ toLogStr ("Invalid request: " `append` msg)
-        return InvalidResponse { invalidResponseMessage = msg }
+shutDownInMemoryTracker :: InMemoryTracker -> IO ()
+shutDownInMemoryTracker tracker = do
+    writeFromMVarOntoDisk "torrents.hs" (inMemoryTrackerTorrents tracker)
+    writeFromMVarOntoDisk "peers.hs" (inMemoryTrackerPeers tracker)
+
+handleInMemoryAnnounce :: InMemoryTracker -> AnnounceRequest -> IO AnnounceResponse
+handleInMemoryAnnounce _ _ = return AnnounceResponse {}
+
+handleInMemoryScrape :: InMemoryTracker -> ScrapeRequest -> IO ScrapeResponse
+handleInMemoryScrape tr r = do
+    let hs = scrapeRequestInfoHashes  r
+
+    return ScrapeResponse
+        { scrapeResponseFiles = []
+        , scrapeResponseFailure = Nothing
+        }
+
+handleInMemoryInvalid :: InMemoryTracker -> InvalidRequest -> IO InvalidResponse
+handleInMemoryInvalid _tracker (InvalidRequest msg) = do
+    print msg
+    return InvalidResponse { invalidResponseMessage = msg }

@@ -24,7 +24,7 @@ instance Arbitrary ScrapeRequest where
         return $ ScrapeRequest infoHashes
 
 propParseScrapeRequest :: ScrapeRequest -> Bool
-propParseScrapeRequest scrapeRequest = 
+propParseScrapeRequest scrapeRequest =
     let parsedRequest = (parseRequest . unParseScrapeRequest) scrapeRequest
     in parsedRequest == Scrape scrapeRequest
 
@@ -47,7 +47,7 @@ instance Arbitrary AnnounceRequest where
             numWant noPeerId compact key trackerId
 
 propParseAnnounceRequest :: AnnounceRequest -> Bool
-propParseAnnounceRequest r = 
+propParseAnnounceRequest r =
     let parsedRequest = (parseRequest . unParseAnnounceRequest) r
     in parsedRequest == Announce r
 

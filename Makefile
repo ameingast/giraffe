@@ -9,6 +9,7 @@ configure:
 build: configure
 	@cabal build
 	@hlint -c bm src test
+	@strip dist/build/giraffe/giraffe
 
 repl:
 	@cabal repl
@@ -27,7 +28,7 @@ clean:
 	@cabal clean
 
 cleanall: clean
-	@rm -fr cabal.sandbox.config .cabal-sandbox
+	@cabal sandbox delete
 
 style:
 	@find bm src test -name "*.hs" | xargs stylish-haskell -i

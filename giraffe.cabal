@@ -37,8 +37,7 @@ Executable              giraffe
                         wai             >= 2.0 && < 2.1,
 
                         bencode         >= 0.5 && < 0.6,
-                        http-types      >= 0.8 && < 0.9,
-                        fast-logger     >= 2.1 && < 2.2
+                        http-types      >= 0.8 && < 0.9
 
     ghc-prof-options:   -prof -auto-all
 
@@ -63,7 +62,6 @@ Benchmark               giraffe-bm
 
                         bencode         >= 0.5 && < 0.6,
                         http-types      >= 0.8 && < 0.9,
-                        fast-logger     >= 2.1 && < 2.2,
 
                         criterion       >= 0.8 && < 0.9
 
@@ -88,7 +86,6 @@ Test-Suite              giraffe-test
 
                         bencode         >= 0.5 && < 0.6,
                         http-types      >= 0.8 && < 0.9,
-                        fast-logger     >= 2.1 && < 2.2,
 
                         QuickCheck      >= 2.6 && < 2.7,
                         test-framework  >= 0.8 && < 0.9,

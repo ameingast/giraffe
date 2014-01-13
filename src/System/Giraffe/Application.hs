@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module System.Giraffe.Application 
+module System.Giraffe.Application
     ( handle
     , parseRequest
     , unParseScrapeRequest
@@ -14,25 +14,27 @@ import           Data.Text            (Text, pack)
 import           Data.Text.Encoding   (decodeUtf8, encodeUtf8)
 import           Data.Text.Read       (decimal, signed)
 import           Network.HTTP.Types   (QueryItem, Status, status200, status500)
-import           Network.Wai          (Request (..), Response, responseLBS, defaultRequest)
+import           Network.Wai          (Request (..), Response, defaultRequest,
+                                       responseLBS)
 import           System.Giraffe.Types
 
-handle :: RequestHandler a => Configuration -> a -> Request -> IO Response
-handle config handler request = do
-    (status, content) <- processRequest config handler (parseRequest request)
+handle :: Tracker a => a -> Request -> IO Response
+handle handler request = do
+    (status, content) <- processRequest handler (parseRequest request)
     return $ responseLBS status [("content-type", "plain/text")] (bPack content)
 
-processRequest :: RequestHandler a => Configuration -> a -> TrackerRequest -> IO (Status, BEncode)
-processRequest config h request = dispatchRequest h config request >>= \r -> case r of
-    Nothing ->
-        return (status500, BString "Cannot encode response")
-    Just response ->
-        return (status200, response)
+processRequest :: Tracker a => a -> TrackerRequest -> IO (Status, BEncode)
+processRequest h request =
+    dispatchRequest h request >>= \r -> case r of
+        Nothing ->
+            return (status500, BString "Cannot encode response")
+        Just response ->
+            return (status200, response)
 
-dispatchRequest :: RequestHandler a => a -> Configuration -> TrackerRequest -> IO (Maybe BEncode)
-dispatchRequest h config (Announce r) = liftM encode (handleAnnounceRequest h config r)
-dispatchRequest h config (Scrape r) = liftM encode (handleScrapeRequest h config r)
-dispatchRequest h config (Invalid r) =  liftM encode (handleInvalidRequest h config r)
+dispatchRequest :: Tracker a => a -> TrackerRequest -> IO (Maybe BEncode)
+dispatchRequest h (Announce r) = liftM encode (handleAnnounceRequest h r)
+dispatchRequest h (Scrape r) = liftM encode (handleScrapeRequest h r)
+dispatchRequest h (Invalid r) = liftM encode (handleInvalidRequest h r)
 
 parseRequest :: Request -> TrackerRequest
 parseRequest r =
@@ -60,12 +62,12 @@ parseScrapeRequest r =
 
 
 unParseScrapeRequest :: ScrapeRequest -> Request
-unParseScrapeRequest scrapeRequest = defaultRequest
-    { pathInfo = ["scrape"]
-    , queryString = infoHashes (scrapeRequestInfoHashes scrapeRequest)
-    }
-    where
-        infoHashes = map (\h -> ("info_hash", Just $ encodeUtf8 h))
+unParseScrapeRequest scrapeRequest =
+    let infoHashes = map (\h -> ("info_hash", Just $ encodeUtf8 h))
+    in defaultRequest
+        { pathInfo = ["scrape"]
+        , queryString = infoHashes (scrapeRequestInfoHashes scrapeRequest)
+        }
 
 parseAnnounceRequest :: Request -> Maybe AnnounceRequest
 parseAnnounceRequest r | not (isValidRequest r "announce") = Nothing
