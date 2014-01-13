@@ -26,7 +26,7 @@ data AnnounceRequest = AnnounceRequest
     -- BitTorrent are typically 6881-6889. Clients may choose to give up if it
     -- cannot establish a port within this range.
 
-    , announceRequestIp         :: Maybe Text
+    , announceRequestIp         :: Text
     -- ^ Optional. The true IP address of the client machine, in dotted quad format
     -- or rfc3513 defined hexed IPv6 address.
     --
@@ -261,8 +261,11 @@ data Peer = Peer
     -- ^ The peers IP address either IPv6 (hexed) or IPv4 (dotted quad) or
     -- DNS name.
 
-    , peerPort :: Int
+    , peerPort :: Integer
     -- ^ The peers port number.
+    
+    -- TODO: peer state linking the peer to many torrents (omitted during
+    -- serialization)
     } deriving (Show, Eq, Read, Ord)
 
 data ScrapeRequest = ScrapeRequest

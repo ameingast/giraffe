@@ -5,6 +5,7 @@ module System.Giraffe.Tracker where
 import           Control.Concurrent.MVar
 import           Control.Monad           (liftM)
 import qualified Data.Map                as M
+import Data.Text
 import           System.Giraffe.Types
 import           System.Giraffe.Util
 
@@ -42,12 +43,22 @@ handleInMemoryAnnounce tr r = do
 
     lookupTorrent tr h >>= \t -> case t of
         Nothing ->
-            -- TODO: handle error
-            return undefined
+            return AnnounceResponse
+                { announceResponseInterval = cfgRequestInterval c
+                , announceResponseMinimumInterval = Just (cfgMinRequestInterval c)
+                , announceResponsePeers = []
+                , announceResponseFailureReason = Just "No such torrent registered"
+                , announceResponseWarningMessage = Nothing
+                , announceResponseTrackerId = cfgTrackerId c
+                , announceResponseComplete = 0
+                , announceResponseIncomplete = 0
+                }
         Just torrent -> do
             peers <- lookupPeersForTorrent tr torrent
-
-            -- TODO: register client
+            registerPeer tr (announceRequestPeerId r) 
+                (announceRequestInfoHash r) 
+                (announceRequestIp r) 
+                (announceRequestPort r)
 
             return AnnounceResponse
                 { announceResponseInterval = cfgRequestInterval c
@@ -59,6 +70,15 @@ handleInMemoryAnnounce tr r = do
                 , announceResponseComplete = torrentCompleted torrent
                 , announceResponseIncomplete = torrentIncomplete torrent
                 }
+
+registerPeer :: InMemoryTracker -> PeerId -> InfoHash -> Text -> Integer -> IO () 
+registerPeer tr pid _h ip port =
+    -- TODO: hookup the peer with torrent state
+    modifyMVar_ (inMemoryTrackerPeers tr) $ return . M.insert pid Peer
+        { peerId = pid
+        , peerIp = ip
+        , peerPort = port
+        }
 
 handleInMemoryScrape :: InMemoryTracker -> ScrapeRequest -> IO ScrapeResponse
 handleInMemoryScrape tr r =

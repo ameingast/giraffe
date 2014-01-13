@@ -18,6 +18,7 @@ import           Network.HTTP.Types   (QueryItem, Status, status200)
 import           Network.Wai          (Request (..), Response, defaultRequest,
                                        responseLBS)
 import           System.Giraffe.Types
+import Network.Socket.Internal (SockAddr(..))
 
 bootstrap :: Tracker a => a -> IO ()
 bootstrap _ = return ()
@@ -76,6 +77,7 @@ parseAnnounceRequest r = do
 
     somePeerId <- find qs "id"
     someInfoHash <- find qs "info_hash"
+    someIp <- parseIp r
     somePort <- find qs "port" >>= parseInteger
     someUploaded <- find qs "uploaded" >>= parseInteger
     someDownloaded <- find qs "downloaded" >>= parseInteger
@@ -87,7 +89,7 @@ parseAnnounceRequest r = do
         { announceRequestPeerId = somePeerId
         , announceRequestInfoHash = someInfoHash
         , announceRequestPort = somePort
-        , announceRequestIp = find qs "ip"
+        , announceRequestIp = someIp
         , announceRequestUploaded = someUploaded
         , announceRequestDownloaded = someDownloaded
         , announceRequestLeft = someLeft
@@ -99,6 +101,18 @@ parseAnnounceRequest r = do
         , announceRequestTrackerId = find qs "trackerid"
     }
 
+parseIp :: Request -> Maybe Text
+parseIp r = 
+    case find (queryString r) "ip" of
+        Just ip -> 
+            Just ip
+        Nothing -> 
+            case remoteHost r of
+                (SockAddrInet _ addr) ->
+                    Just $ pack $ show addr
+                _ -> 
+                    Nothing
+                
 unParseAnnounceRequest :: AnnounceRequest -> Request
 unParseAnnounceRequest r = defaultRequest
     { pathInfo = ["announce"]
@@ -106,7 +120,7 @@ unParseAnnounceRequest r = defaultRequest
         [ ("id", Just $ encodeUtf8 $ announceRequestPeerId r)
         , ("info_hash", Just $ encodeUtf8 $ announceRequestInfoHash r)
         , ("port", encodeShowBs $ announceRequestPort r)
-        , ("ip", liftM encodeUtf8 $ announceRequestIp r)
+        , ("ip", Just $ encodeUtf8 $ announceRequestIp r)
         , ("uploaded", encodeShowBs $ announceRequestUploaded r)
         , ("downloaded", encodeShowBs $ announceRequestDownloaded r)
         , ("left", encodeShowBs $ announceRequestLeft r)
