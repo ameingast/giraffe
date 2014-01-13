@@ -9,5 +9,5 @@ import           System.Giraffe.Types
 main :: IO ()
 main = do
     config <- loadConfiguration
-    tracker <- createInMemoryTracker config
+    tracker <- initTracker config :: IO InMemoryTracker
     run (cfgPort config) (handle tracker)
