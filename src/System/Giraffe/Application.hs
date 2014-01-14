@@ -8,17 +8,17 @@ module System.Giraffe.Application
     , unParseAnnounceRequest
     ) where
 
-import           Control.Monad        (liftM)
-import           Data.BEncode         (BEncode (..), bPack)
-import qualified Data.ByteString      as BS (ByteString)
-import           Data.Text            (Text, pack)
-import           Data.Text.Encoding   (decodeUtf8, encodeUtf8)
-import           Data.Text.Read       (decimal, signed)
-import           Network.HTTP.Types   (QueryItem, Status, status200)
-import           Network.Wai          (Request (..), Response, defaultRequest,
-                                       responseLBS)
+import           Control.Monad           (liftM)
+import           Data.BEncode            (BEncode (..), bPack)
+import qualified Data.ByteString         as BS (ByteString)
+import           Data.Text               (Text, pack)
+import           Data.Text.Encoding      (decodeUtf8, encodeUtf8)
+import           Data.Text.Read          (decimal, signed)
+import           Network.HTTP.Types      (QueryItem, Status, status200)
+import           Network.Socket.Internal (SockAddr (..))
+import           Network.Wai             (Request (..), Response,
+                                          defaultRequest, responseLBS)
 import           System.Giraffe.Types
-import Network.Socket.Internal (SockAddr(..))
 
 bootstrap :: Tracker a => a -> IO ()
 bootstrap _ = return ()
@@ -61,7 +61,6 @@ parseScrapeRequest r =
     in Just ScrapeRequest
         { scrapeRequestInfoHashes = findAll qs "info_hash" }
 
-
 unParseScrapeRequest :: ScrapeRequest -> Request
 unParseScrapeRequest scrapeRequest =
     let infoHashes = map (\h -> ("info_hash", Just $ encodeUtf8 h))
@@ -102,17 +101,17 @@ parseAnnounceRequest r = do
     }
 
 parseIp :: Request -> Maybe Text
-parseIp r = 
+parseIp r =
     case find (queryString r) "ip" of
-        Just ip -> 
+        Just ip ->
             Just ip
-        Nothing -> 
+        Nothing ->
             case remoteHost r of
                 (SockAddrInet _ addr) ->
                     Just $ pack $ show addr
-                _ -> 
+                _ ->
                     Nothing
-                
+
 unParseAnnounceRequest :: AnnounceRequest -> Request
 unParseAnnounceRequest r = defaultRequest
     { pathInfo = ["announce"]

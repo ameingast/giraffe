@@ -39,12 +39,5 @@ loadFromDiskIntoMVar path def =
         Just contents ->
             newMVar (readSafe contents def)
 
-dropNothing :: [Maybe a] -> [a]
-dropNothing xxs = dropNothing' xxs []
-    where
-        dropNothing' [] ys = ys
-        dropNothing' (Nothing:xs) ys = dropNothing' xs ys
-        dropNothing' (Just x:xs) ys = dropNothing' xs (x:ys)
-
 strictTextToLazyByteString :: Text -> LBS.ByteString
 strictTextToLazyByteString = TLE.encodeUtf8 . TL.fromStrict

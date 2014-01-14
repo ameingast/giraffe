@@ -5,6 +5,7 @@ module System.Giraffe.Types where
 import           Data.BEncode         (BEncode (..))
 import qualified Data.ByteString.Lazy as BS (fromChunks)
 import qualified Data.Map             as M
+import           Data.Monoid
 import           Data.Text            (Text)
 import           Data.Text.Encoding   (encodeUtf8)
 import           System.Giraffe.Util
@@ -142,7 +143,7 @@ data AnnounceEvent
     -- the "completed downloads" metric based solely on this event.
 
     | AnnounceEventStopped
-    -- ^Must be sent to the tracker if the client is shutting down gracefully.
+    -- ^ Must be sent to the tracker if the client is shutting down gracefully.
     deriving (Eq, Read, Ord)
 
 instance Show AnnounceEvent where
@@ -254,19 +255,24 @@ instance BEEncodable MetaInfo where
     encode MetaInfo{} = undefined
 
 data Peer = Peer
-    { peerId   :: PeerId
+    { peerId       :: PeerId
     -- ^ The Peers self-selected ID, as described above for the tracker request.
 
-    , peerIp   :: Text
+    , peerIp       :: Text
     -- ^ The peers IP address either IPv6 (hexed) or IPv4 (dotted quad) or
     -- DNS name.
 
-    , peerPort :: Integer
+    , peerPort     :: Integer
     -- ^ The peers port number.
-    
-    -- TODO: peer state linking the peer to many torrents (omitted during
-    -- serialization)
-    } deriving (Show, Eq, Read, Ord)
+
+    , peerLastSeen :: Integer
+    } deriving (Show, Read, Ord)
+
+instance Eq Peer where
+    (Peer id1 ip1 port1 _) == (Peer id2 ip2 port2 _) =
+        id1 == id2 &&
+        ip1 == ip2 &&
+        port1 == port2
 
 data ScrapeRequest = ScrapeRequest
     { scrapeRequestInfoHashes :: [InfoHash]
@@ -354,6 +360,7 @@ data Configuration = Configuration
     , cfgRequestInterval    :: Int
     , cfgMinRequestInterval :: Int
     , cfgRequestTimeout     :: Integer
+    , cfgPeerNumWant        :: Integer
 
     , cfgHostName           :: Text
     , cfgPort               :: Int
@@ -364,23 +371,26 @@ data Configuration = Configuration
     , cfgScrapePrefix       :: Text
     } deriving (Show, Eq, Read, Ord)
 
-defaultConfiguration :: Configuration
-defaultConfiguration = Configuration
-    { cfgTrackerId = "Giraffe"
-    , cfgTrackerVersion = "0.1"
+instance Monoid Configuration where
+    mempty = Configuration
+        { cfgTrackerId = "Giraffe"
+        , cfgTrackerVersion = "0.1"
 
-    , cfgRequestInterval = 50
-    , cfgMinRequestInterval = 50
-    , cfgRequestTimeout = 10000
+        , cfgRequestInterval = 50
+        , cfgMinRequestInterval = 50
+        , cfgRequestTimeout = 10000
+        , cfgPeerNumWant = 50
 
-    , cfgHostName = "localhost"
-    , cfgPort = 8080
-    , cfgDataDirectory = "data/"
-    , cfgTorrentDirectory = "data/torrents/"
+        , cfgHostName = "localhost"
+        , cfgPort = 8080
+        , cfgDataDirectory = "data/"
+        , cfgTorrentDirectory = "data/torrents/"
 
-    , cfgAnnouncePrefix = "/announce"
-    , cfgScrapePrefix = "/scrape"
-    }
+        , cfgAnnouncePrefix = "/announce"
+        , cfgScrapePrefix = "/scrape"
+        }
+
+    mappend x _ = x
 
 class Tracker a where
     trackerConfiguration :: a -> Configuration

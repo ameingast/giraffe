@@ -1,12 +1,13 @@
 module System.Giraffe.Configuration where
 
+import           Data.Monoid
 import           System.Giraffe.Types
 import           System.Giraffe.Util
 
 loadConfiguration :: IO Configuration
 loadConfiguration =
     readConfiguration "config.hs" >>= \c -> case c of
-        Nothing -> return defaultConfiguration
+        Nothing -> return mempty
         Just configuration -> return configuration
 
 readConfiguration :: FilePath -> IO (Maybe Configuration)
