@@ -2,9 +2,7 @@
 
 module System.Giraffe.TrackerBenchmark (trackerBenchmark) where
 
-import           Criterion.Config
 import           Criterion.Main
-import           Data.Monoid
 import           Data.Text              (Text, pack)
 import           System.Giraffe.Tracker
 import           System.Giraffe.Types
@@ -24,15 +22,14 @@ fullScrapeRequest gen = ScrapeRequest
 randomText :: Int -> StdGen -> Text
 randomText size = pack . take size . randomRs ('a', 'z')
 
-trackerBenchmark :: IO ()
+trackerBenchmark :: IO [Benchmark]
 trackerBenchmark = do
     gen <- newStdGen
     tr <- createEmptyTracker
 
-    defaultMainWith defaultConfig (return ())
+    return
         [ bgroup "Tracker/init"
             [ bench "createEmptyTracker" createEmptyTracker
-            , bench "createInMemoryTracker" $ createInMemoryTracker mempty
             ]
         , bgroup "EmptyTracker/announce"
             []

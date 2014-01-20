@@ -22,7 +22,7 @@ test: configure
 	@cabal test
 
 bench: build
-	@cabal bench
+	@cabal bench --benchmark-option=-odist/bm.html
 
 clean:
 	@cabal clean
