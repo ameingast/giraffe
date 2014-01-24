@@ -9,6 +9,7 @@ import           Data.Monoid
 import           Data.Text            (Text)
 import           Data.Text.Encoding   (encodeUtf8)
 import           System.Giraffe.Util
+import           Control.Concurrent.MVar
 
 -- | The data type that maps http announce request.
 data AnnounceRequest = AnnounceRequest
@@ -392,16 +393,6 @@ instance Monoid Configuration where
 
     mappend x _ = x
 
-class Tracker a where
-    trackerConfiguration :: a -> Configuration
-
-    handleAnnounceRequest :: a -> AnnounceRequest -> IO AnnounceResponse
-    handleScrapeRequest :: a -> ScrapeRequest -> IO ScrapeResponse
-    handleInvalidRequest :: a -> InvalidRequest -> IO InvalidResponse
-
-    initTracker :: Configuration -> IO a
-    stopTracker :: a -> IO ()
-
 class BEEncodable a where
     encode :: a -> BEncode
 
@@ -411,3 +402,9 @@ class BEDecodable a where
 type InfoHash = Text
 
 type PeerId = Text
+
+data InMemoryTracker = InMemoryTracker
+    { inMemoryTrackerConfiguration :: Configuration
+    , inMemoryTrackerPeers         :: MVar (M.Map InfoHash Peer)
+    , inMemoryTrackerTorrents      :: MVar (M.Map InfoHash Torrent)
+    } deriving (Eq)

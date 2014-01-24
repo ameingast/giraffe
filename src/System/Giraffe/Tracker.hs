@@ -11,25 +11,13 @@ import           Data.Monoid             (mempty)
 import           Data.Time.Clock.POSIX
 import           System.Directory
 import           System.Giraffe.Types
+import           System.Giraffe.Configuration
 import           System.Giraffe.Util
 import           System.Posix.Signals
 
-data InMemoryTracker = InMemoryTracker
-    { inMemoryTrackerConfiguration :: Configuration
-    , inMemoryTrackerPeers         :: MVar (M.Map InfoHash Peer)
-    , inMemoryTrackerTorrents      :: MVar (M.Map InfoHash Torrent)
-    } deriving (Eq)
-
-instance Tracker InMemoryTracker where
-    trackerConfiguration = inMemoryTrackerConfiguration
-    handleAnnounceRequest = handleInMemoryAnnounce
-    handleScrapeRequest = handleInMemoryScrape
-    handleInvalidRequest = handleInMemoryInvalid
-    initTracker = createInMemoryTracker
-    stopTracker = shutDownInMemoryTracker
-
-createInMemoryTracker :: Configuration -> IO InMemoryTracker
-createInMemoryTracker c = do
+createInMemoryTracker :: IO InMemoryTracker
+createInMemoryTracker = do
+    c <- loadConfiguration "config.hs"
     let dir = cfgDataDirectory c
 
     createDirectoryIfMissing True dir
@@ -50,13 +38,15 @@ createEmptyTracker =
 
 shutDownInMemoryTracker :: InMemoryTracker -> IO ()
 shutDownInMemoryTracker tr = do
-    let dir = cfgDataDirectory (trackerConfiguration tr)
+    let dir = cfgDataDirectory (inMemoryTrackerConfiguration tr)
+
+    writeConfiguration "config.hs" (inMemoryTrackerConfiguration tr)
     writeFromMVarOntoDisk (dir ++ "torrents.hs") (inMemoryTrackerTorrents tr)
     writeFromMVarOntoDisk (dir ++ "peers.hs") (inMemoryTrackerPeers tr)
 
 handleInMemoryAnnounce :: InMemoryTracker -> AnnounceRequest -> IO AnnounceResponse
 handleInMemoryAnnounce tr r = do
-    let c = trackerConfiguration tr
+    let c = inMemoryTrackerConfiguration tr
     let h = announceRequestInfoHash r
     let peer = Peer (announceRequestInfoHash r) (announceRequestIp r) (announceRequestPort r) 0
 
@@ -104,11 +94,13 @@ registerPeer tr p t = do
 
 addLeecherPeer :: Torrent -> Peer -> M.Map InfoHash Torrent -> M.Map InfoHash Torrent
 addLeecherPeer t p =
-    let h = torrentInfoHash t
-    in M.insert h t
+    torrentInsert t
         { torrentIncomplete = torrentIncomplete t + 1
         , torrentLeecherPeerIds = peerId p : torrentLeecherPeerIds t
         }
+
+torrentInsert :: Torrent -> M.Map InfoHash Torrent -> M.Map InfoHash Torrent
+torrentInsert t = M.insert (torrentInfoHash t) t
 
 completePeer :: InMemoryTracker -> Peer -> Torrent -> IO ()
 completePeer tr p t = do
@@ -117,8 +109,7 @@ completePeer tr p t = do
 
 updateCompletePeer :: Torrent -> Peer -> M.Map InfoHash Torrent -> M.Map InfoHash Torrent
 updateCompletePeer t p =
-    let h = torrentInfoHash t
-    in M.insert h t
+    torrentInsert t
         { torrentCompleted = torrentCompleted t + 1
         , torrentIncomplete = torrentIncomplete t - 1
         , torrentSeederPeerIds = peerId p : torrentSeederPeerIds t
@@ -131,8 +122,7 @@ removePeerFromTorrent tr p t =
 
 updateRemovePeer :: Torrent -> Peer -> M.Map InfoHash Torrent -> M.Map InfoHash Torrent
 updateRemovePeer t p =
-    let h =  torrentInfoHash t
-    in M.insert h t
+    torrentInsert t
         { torrentSeederPeerIds = [ x | x <- torrentSeederPeerIds t, x /= peerId p ]
         , torrentLeecherPeerIds = [ x | x <- torrentLeecherPeerIds t, x /= peerId p ]
         }

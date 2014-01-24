@@ -4,9 +4,9 @@ import           Data.Monoid
 import           System.Giraffe.Types
 import           System.Giraffe.Util
 
-loadConfiguration :: IO Configuration
-loadConfiguration =
-    readConfiguration "config.hs" >>= \c -> case c of
+loadConfiguration :: FilePath -> IO Configuration
+loadConfiguration path =
+    readConfiguration path >>= \c -> case c of
         Nothing -> return mempty
         Just configuration -> return configuration
 

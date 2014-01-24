@@ -1,8 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module System.Giraffe.Application
-    ( bootstrap
-    , handle
+    ( handle
     , parseRequest
     , unParseScrapeRequest
     , unParseAnnounceRequest
@@ -19,23 +18,21 @@ import           Network.Socket.Internal (SockAddr (..))
 import           Network.Wai             (Request (..), Response,
                                           defaultRequest, responseLBS)
 import           System.Giraffe.Types
+import           System.Giraffe.Tracker
 
-bootstrap :: Tracker a => a -> IO ()
-bootstrap _ = return ()
-
-handle :: Tracker a => a -> Request -> IO Response
-handle handler request = do
-    (status, content) <- processRequest handler (parseRequest request)
+handle :: InMemoryTracker -> Request -> IO Response
+handle tr request = do
+    (status, content) <- processRequest tr (parseRequest request)
     return $ responseLBS status [("content-type", "plain/text")] (bPack content)
 
-processRequest :: Tracker a => a -> TrackerRequest -> IO (Status, BEncode)
-processRequest h request =
-    dispatchRequest h request >>= \r -> return (status200, r)
+processRequest :: InMemoryTracker -> TrackerRequest -> IO (Status, BEncode)
+processRequest tr request =
+    dispatchRequest tr request >>= \r -> return (status200, r)
 
-dispatchRequest :: Tracker a => a -> TrackerRequest -> IO BEncode
-dispatchRequest h (Announce r) = liftM encode (handleAnnounceRequest h r)
-dispatchRequest h (Scrape r) = liftM encode (handleScrapeRequest h r)
-dispatchRequest h (Invalid r) = liftM encode (handleInvalidRequest h r)
+dispatchRequest :: InMemoryTracker -> TrackerRequest -> IO BEncode
+dispatchRequest tr (Announce r) = liftM encode (handleInMemoryAnnounce tr r)
+dispatchRequest tr (Scrape r) = liftM encode (handleInMemoryScrape tr r)
+dispatchRequest tr (Invalid r) = liftM encode (handleInMemoryInvalid  tr r)
 
 parseRequest :: Request -> TrackerRequest
 parseRequest r =

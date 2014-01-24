@@ -4,7 +4,6 @@ module System.Giraffe.TrackerBenchmark (trackerBenchmark) where
 
 import           Criterion.Config
 import           Criterion.Main
-import           Data.Monoid
 import           Data.Text              (Text, pack)
 import           System.Giraffe.Tracker
 import           System.Giraffe.Types
@@ -32,7 +31,7 @@ trackerBenchmark = do
     defaultMainWith defaultConfig (return ())
         [ bgroup "Tracker/init"
             [ bench "createEmptyTracker" createEmptyTracker
-            , bench "createInMemoryTracker" $ createInMemoryTracker mempty
+            , bench "createInMemoryTracker" createInMemoryTracker
             ]
         , bgroup "EmptyTracker/announce"
             []
