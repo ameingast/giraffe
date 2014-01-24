@@ -2,7 +2,6 @@
 
 module System.Giraffe.ApplicationBenchmark (applicationBenchmark) where
 
-import           Criterion.Config
 import           Criterion.Main
 import           Network.Wai                (Request (..), defaultRequest)
 import           System.Giraffe.Application (parseRequest)
@@ -39,9 +38,8 @@ invalidRequest = defaultRequest
     { pathInfo = ["UnZQnWkMoBBdvTxwA4AEnzAvdAHxwjBRGJsPOncHmvrEGv51z888eiY4spIfVfG9"]
     }
 
-applicationBenchmark :: IO ()
-applicationBenchmark = defaultMainWith defaultConfig (return ())
-    [ bgroup "Application/parseRequest"
+applicationBenchmark :: IO [Benchmark]
+applicationBenchmark = return [ bgroup "Application/parseRequest"
         [ bench "scrapeRequest" $ whnf parseRequest scrapeRequest
         , bench "announceRequest" $ whnf parseRequest announceRequest
         , bench "invalidRequest" $ whnf parseRequest invalidRequest
